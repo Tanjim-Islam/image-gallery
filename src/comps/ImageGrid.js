@@ -4,21 +4,16 @@ import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 
 const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
   const { docs: initialDocs } = useFirestore("images");
-  const [docs, setDocs] = useState(initialDocs);
-
-  const [hasReordered, setHasReordered] = useState(false);
+  const [docs, setDocs] = useState([]);
 
   useEffect(() => {
+    // Check if the images have been reordered in a previous session.
     const savedDocs = localStorage.getItem("reorderedImages");
-    if (savedDocs && !hasReordered) {
+    if (savedDocs) {
       setDocs(JSON.parse(savedDocs));
-    } else if (!hasReordered) {
+    } else {
       setDocs(initialDocs);
     }
-  }, [initialDocs, hasReordered]);
-
-  useEffect(() => {
-    setDocs(initialDocs);
   }, [initialDocs]);
 
   const handleImageClick = (url) => {
@@ -39,15 +34,14 @@ const ImageGrid = ({ setSelectedImg, selectedImages, setSelectedImages }) => {
   const handleOnDragEnd = (result) => {
     if (!result.destination) return;
 
-    const items = Array.from(docs);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const newDocs = Array.from(docs);
+    const [reorderedItem] = newDocs.splice(result.source.index, 1);
+    newDocs.splice(result.destination.index, 0, reorderedItem);
 
-    setDocs(items);
-    setHasReordered(true);
+    setDocs(newDocs);
 
     // Save the reordered items to local storage
-    localStorage.setItem("reorderedImages", JSON.stringify(items));
+    localStorage.setItem("reorderedImages", JSON.stringify(newDocs));
   };
 
   return (
